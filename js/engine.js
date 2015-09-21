@@ -104,6 +104,9 @@ var Engine = (function(global) {
      * they are just drawing the entire screen over and over.
      */
     function render() {
+        //ADDED BY STUDENT: This code clean the top white portion of the canvas to prevent remanence when the player reach the water
+        ctx.clearRect(0,0,canvas.height,canvas.width);
+
         /* This array holds the relative URL to the image used
          * for that particular row of the game level.
          */
@@ -181,4 +184,6 @@ var Engine = (function(global) {
      * from within their app.js files.
      */
     global.ctx = ctx;
+    //ADDED BY STUDENT: add canvas to the global variable
+    global.canvas = canvas;
 })(this);
