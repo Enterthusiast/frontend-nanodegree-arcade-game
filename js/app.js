@@ -49,6 +49,8 @@ Enemy.prototype.rowGenerator = function() {
 var Player = function() {
     this.x = 2 * this.Hstep; //one step right is 101
     this.y = 5 * this.Vstep - Spriteoffset; //one step down is 83 and we shift the sprite of 30 pixels for perspective effect
+    this.score = 0;
+    this.bestscore = 0;
     this.sprite = 'images/char-boy.png';
 };
 Player.prototype.Hstep = 101;
@@ -62,22 +64,47 @@ Player.prototype.update = function() {
         {
             if ((this.x + 50.5) > allEnemies[i].x && (this.x + 50.5)  < (allEnemies[i].x + 101))
             {
-                console.log("Player " + (this.x + 50.5) + " Enemy " + allEnemies[i].x + " " + (allEnemies[i].x + 101));
-                this.respawn();
+                // the center of the player sprite is inside an enemy sprite => game over => respawn
+                this.respawn("dead");
             }
         }
 
     }
 };
-Player.prototype.respawn = function() {
+Player.prototype.respawn = function(reason) {
     //reset player position
     this.x = 2 * this.Hstep; //one step right is 101
     this.y = 5 * this.Vstep - Spriteoffset; //one step down is 83 and we shift the sprite of 30 pixels for perspective effect
+    if (reason === "dead")
+    {
+        this.score = 0;
+    }
 }
 Player.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+    // render score
+    ctx.font = "bold 18px Arial";
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 3;
+    ctx.strokeText("Score " + this.score, 10, 80);
+    ctx.strokeText("Best " + this.bestscore, 10, 100);
+    ctx.fillStyle = "white";
+    ctx.fillText("Score " + this.score, 10, 80);
+    ctx.fillText("Best " + this.bestscore, 10, 100);
+};
+Player.prototype.setScore = function(Oldpositiony, Newpositiony) {
+    // checking if the vertical step was made from a danger lane (enemy lanes) to an higher lane
+    if (Oldpositiony > 0 && Oldpositiony < 3 * this.Vstep && Newpositiony > 0 - this.Vstep && Newpositiony < 3 * this.Vstep)
+    {
+        this.score = this.score + 1;
+        if (this.score > this.bestscore)
+        {
+            this.bestscore = this.score;
+        }
+    }
 };
 Player.prototype.handleInput = function(key) {
+    var Oldpositiony = this.y; // mandatory for the score function
     switch(key) {
         case 'left':
             var Newposition = this.x - this.Hstep;
@@ -88,10 +115,15 @@ Player.prototype.handleInput = function(key) {
             break;
         case 'up':
             var Newposition = this.y - this.Vstep;
-            if (Newposition >= 0 - this.Vstep)
+            if (Newposition >= 0)
             {
                 this.y = Newposition;
+            } else {
+                this.respawn("success");
             }
+            // calculate score using the old & new positions
+            // score is only calculated for vertical movements
+            this.setScore(Oldpositiony, Newposition);
             break;
         case 'right':
             var Newposition = this.x + this.Hstep;
@@ -102,10 +134,13 @@ Player.prototype.handleInput = function(key) {
             break;
         case 'down':
             var Newposition = this.y + this.Vstep;
-            if (Newposition <= canvas.height - 2 * this.Vstep) //preventing the player to move out of the tile
+            if (Newposition <= canvas.height - 2 * this.Vstep) //preventing the player to move out of the bottom tile
             {
                 this.y = Newposition;
             }
+            // calculate score using the old & new positions
+            // score is only calculated for vertical movements
+            this.setScore(Oldpositiony, Newposition);
             break;
     }
 };
