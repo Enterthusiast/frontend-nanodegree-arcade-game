@@ -1,12 +1,8 @@
 // Enemies our player must avoid
 var Enemy = function() {
-    // Variables applied to each of our instances go here,
-    // we've provided one for you to get started
-    this.x = - 101;
-    this.y = this.rowGenerator() * 83 - Spriteoffset; //one step down is 81 and we shift the sprite of 25 pixels for perspective effect
+    this.x = - Hstep;
+    this.y = this.rowGenerator() * Vstep - Spriteoffset; // One step down is 1*Vstep and we add a Spriteoffset for perspective effect
     this.speed = this.speedGenerator();
-    // The image/sprite for our enemies, this uses
-    // a helper we've provided to easily load images
     this.sprite = 'images/enemy-bug.png';
 };
 
@@ -29,59 +25,68 @@ Enemy.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
+// Reset the enemy position after he went offscreen
 Enemy.prototype.respawn = function() {
-    this.x = - 101;
-    this.y = this.rowGenerator() * 83 - Spriteoffset;
+    this.x = - Hstep;
+    this.y = this.rowGenerator() * Vstep - Spriteoffset;
     this.speed = this.speedGenerator();
 }
 
+// Generate a speed
 Enemy.prototype.speedGenerator = function() {
     return Math.floor(Math.random() * (600 - 100)) + 100; //Randomly choose a speed for a ladybug
 }
 
+// Randomly choose one of the three rows
 Enemy.prototype.rowGenerator = function() {
     return Math.floor(Math.random() * (4 - 1)) + 1; //Randomly choose a ladybug row
 }
 
-// Now write your own player class
-// This class requires an update(), render() and
-// a handleInput() method.
+// Player class
 var Player = function() {
-    this.x = 2 * this.Hstep; //one step right is 101
-    this.y = 5 * this.Vstep - Spriteoffset; //one step down is 83 and we shift the sprite of 30 pixels for perspective effect
+    this.x = 2 * Hstep; // one step on the right is 1*Hstep
+    this.y = 5 * Vstep - Spriteoffset; // one step down is 1*Vstep and we add a Spriteoffset for perspective effect
     this.score = 0;
     this.bestscore = 0;
     this.sprite = 'images/char-boy.png';
 };
-Player.prototype.Hstep = 101;
-Player.prototype.Vstep = 83;
+
+// The player update function is in charge of calculating collision
 Player.prototype.update = function() {
-    //Collision check
+    // The loop cycle through the enemy list
     for (var i = 0; i < allEnemies.length; i = i+1)
     {
-        console.log
+        // It looks for enemy on the same row (same Y position)
         if (allEnemies[i].y === this.y)
         {
+            // If the center of the player sprite is "inside" an enemy sprite => game over => respawn
             if ((this.x + 50.5) > allEnemies[i].x && (this.x + 50.5)  < (allEnemies[i].x + 101))
             {
-                // the center of the player sprite is inside an enemy sprite => game over => respawn
                 this.respawn("dead");
             }
         }
 
     }
 };
+
+// The player respawn function is used for two things, so it takes an argument
 Player.prototype.respawn = function(reason) {
-    //reset player position
-    this.x = 2 * this.Hstep; //one step right is 101
-    this.y = 5 * this.Vstep - Spriteoffset; //one step down is 83 and we shift the sprite of 30 pixels for perspective effect
+    // Respawn always reset the player position
+    this.x = 2 * Hstep;
+    this.y = 5 * Vstep - Spriteoffset;
+
+    // Then if the player is respawned because he died, the score is set to 0
     if (reason === "dead")
     {
         this.score = 0;
     }
 }
+
+// The player render function also render the score (because the score is attached to the player)
 Player.prototype.render = function() {
+    // render player
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+
     // render score
     ctx.font = "bold 18px Arial";
     ctx.strokeStyle = "black";
@@ -92,33 +97,45 @@ Player.prototype.render = function() {
     ctx.fillText("Score " + this.score, 10, 80);
     ctx.fillText("Best " + this.bestscore, 10, 100);
 };
+
+// The setScore function calculate the score and update the highscore.
 Player.prototype.setScore = function(Oldpositiony, Newpositiony) {
-    // checking if the vertical step was made from a danger lane (enemy lanes) to an higher lane
-    if (Oldpositiony > 0 && Oldpositiony < 3 * this.Vstep && Newpositiony > 0 - this.Vstep && Newpositiony < 3 * this.Vstep)
+    // The player score when moving up
+    // The function check if the player vertical movement was made from a danger lane (gray enemy lanes) to an other/or the water row
+    // This is the only way to score
+    if (Oldpositiony > 0 && Oldpositiony < 3 * Vstep && Newpositiony > 0 - Vstep && Newpositiony < 3 * Vstep)
     {
         this.score = this.score + 1;
+
+        // Update the highscore if required
         if (this.score > this.bestscore)
         {
             this.bestscore = this.score;
         }
     }
 };
+
+// The handleinput function allow the player to move & call the score function if a vertical movement is detected.
 Player.prototype.handleInput = function(key) {
-    var Oldpositiony = this.y; // mandatory for the score function
+    // The score function require this information
+    var Oldpositiony = this.y;
+
+    // Input detection
     switch(key) {
         case 'left':
-            var Newposition = this.x - this.Hstep;
-            if (Newposition >= 0)
+            var Newposition = this.x - Hstep;
+            if (Newposition >= 0) // Prevent the player to move out of the frame
             {
                 this.x = Newposition;
             }
             break;
         case 'up':
-            var Newposition = this.y - this.Vstep;
-            if (Newposition >= 0)
+            var Newposition = this.y - Vstep;
+            if (Newposition >= 0) // Prevent the player to move on the water tiles and above
             {
                 this.y = Newposition;
             } else {
+                // Respawn the player after he succesfully reach the water, so he can continue to play and score
                 this.respawn("success");
             }
             // calculate score using the old & new positions
@@ -126,15 +143,15 @@ Player.prototype.handleInput = function(key) {
             this.setScore(Oldpositiony, Newposition);
             break;
         case 'right':
-            var Newposition = this.x + this.Hstep;
-            if (Newposition <= canvas.width - this.Hstep) //preventing the player to move out of the frame
+            var Newposition = this.x + Hstep;
+            if (Newposition <= canvas.width - Hstep) // Prevent the player to move out of the frame
             {
                 this.x = Newposition;
             }
             break;
         case 'down':
-            var Newposition = this.y + this.Vstep;
-            if (Newposition <= canvas.height - 2 * this.Vstep) //preventing the player to move out of the bottom tile
+            var Newposition = this.y + Vstep;
+            if (Newposition <= canvas.height - 2 * Vstep) // Prevent the player to move out of the bottom grass tiles
             {
                 this.y = Newposition;
             }
@@ -147,6 +164,9 @@ Player.prototype.handleInput = function(key) {
 
 // The game looks better with offseted sprites
 var Spriteoffset = 25;
+// These are the Height and Width of the tiles of the "gameboard"
+var Hstep = 101; // Horizontal
+var Vstep = 83; // Vertical
 
 // Now instantiate your objects.
 // Place all enemy objects in an array called allEnemies
