@@ -4,6 +4,7 @@
     * @required engine.js, resources.js
 *****/
 
+'use strict';
 
 /****
     * @desc this class implement the enemy data, behaviour & render
@@ -32,8 +33,7 @@ Enemy.prototype.update = function(dt) {
     this.x = this.x + this.speed * dt;
 
     // if the enemy position is out of the canvas, the enemy is respawned
-    if (this.x > canvas.width)
-    {
+    if (this.x > canvas.width) {
         this.respawn();
     }
 };
@@ -101,19 +101,16 @@ var Player = function() {
 *****/
 Player.prototype.update = function() {
     // The loop cycle through the enemy list
-    for (var i = 0; i < allEnemies.length; i = i+1)
-    {
+    var allEnemiesLength = allEnemies.length;
+    for (var i = 0; i < allEnemiesLength; i = i+1) {
         // It looks for enemy on the same row (same Y position)
-        if (allEnemies[i].y === this.y)
-        {
+        if (allEnemies[i].y === this.y) {
             // If the center of the player sprite is "inside" an enemy sprite
             // => game over => respawn with "dead parameter"
-            if ((this.x + 50.5) > allEnemies[i].x && (this.x + 50.5)  < (allEnemies[i].x + 101))
-            {
+            if ((this.x + 50.5) > allEnemies[i].x && (this.x + 50.5)  < (allEnemies[i].x + 101)) {
                 this.respawn("dead");
             }
         }
-
     }
 };
 
@@ -129,8 +126,7 @@ Player.prototype.respawn = function(reason) {
     this.y = 5 * Vstep - Spriteoffset;
 
     // Then if the player is respawned because he died, the score is set to 0
-    if (reason === "dead")
-    {
+    if (reason === "dead") {
         this.score = 0;
     }
 }
@@ -168,13 +164,12 @@ Player.prototype.setScore = function(Oldpositiony, Newpositiony) {
     // The function check if the player vertical movement was made
     // from a paved lane to an other paved lane, or to a water tile
     // This is the only way to score
-    if (Oldpositiony > 0 && Oldpositiony < 3 * Vstep && Newpositiony > 0 - Vstep && Newpositiony < 3 * Vstep)
-    {
+    if (Oldpositiony > 0 && Oldpositiony < 3 * Vstep && Newpositiony > 0 - Vstep && Newpositiony < 3 * Vstep) {
+        // Add one point to the score
         this.score = this.score + 1;
 
         // Update the highscore if lower than the present score
-        if (this.score > this.bestscore)
-        {
+        if (this.score > this.bestscore) {
             this.bestscore = this.score;
         }
     }
@@ -194,15 +189,13 @@ Player.prototype.handleInput = function(key) {
     switch(key) {
         case 'left':
             var Newposition = this.x - Hstep;
-            if (Newposition >= 0) // Prevent the player to move out of the frame
-            {
+            if (Newposition >= 0) { // Prevent the player to move out of the frame
                 this.x = Newposition;
             }
             break;
         case 'up':
             var Newposition = this.y - Vstep;
-            if (Newposition >= 0) // Prevent the player to move on the water tiles and above
-            {
+            if (Newposition >= 0) { // Prevent the player to move on the water tiles and above
                 this.y = Newposition;
             } else {
                 // Respawn the player after he succesfully reach the water, so he can continue to play and score
@@ -214,15 +207,13 @@ Player.prototype.handleInput = function(key) {
             break;
         case 'right':
             var Newposition = this.x + Hstep;
-            if (Newposition <= canvas.width - Hstep) // Prevent the player to move out of the frame
-            {
+            if (Newposition <= canvas.width - Hstep) { // Prevent the player to move out of the frame
                 this.x = Newposition;
             }
             break;
         case 'down':
             var Newposition = this.y + Vstep;
-            if (Newposition <= canvas.height - 2 * Vstep) // Prevent the player to move out of the bottom grass tiles
-            {
+            if (Newposition <= canvas.height - 2 * Vstep) { // Prevent the player to move out of the bottom grass tiles
                 this.y = Newposition;
             }
             // calculate score using the old & new positions
@@ -246,8 +237,7 @@ var Vstep = 83; // Vertical height
 
 // Instantiates 3 enemies
 var allEnemies = [];
-for (var i = 0; i < 3; i = i+1)
-{
+for (var i = 0; i < 3; i = i+1) {
     allEnemies[i] = new Enemy();
 }
 
